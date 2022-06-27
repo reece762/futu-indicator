@@ -1,0 +1,10 @@
+//@version=4
+study(title='VolumePressure', precision=1, overlay=false)
+
+var COLOR_UP=#26a69a
+var COLOR_DOWN=#ef5350
+buyingVolume = round(volume * (close - low) / (high - low))
+sellingVolume = round(volume * (high - close) / (high - low))
+
+plot(series=sellingVolume+buyingVolume, style=plot.style_columns, color=COLOR_UP)
+plot(series=sellingVolume, style=plot.style_columns, color=COLOR_DOWN)
