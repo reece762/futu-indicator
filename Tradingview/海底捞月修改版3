@@ -1,0 +1,91 @@
+//@version=5
+indicator(title="海底捞月和波段买入和卖出", shorttitle="海底捞月", timeframe="", timeframe_gaps=true)
+// Getting inputs
+
+FUTU_SMA(s, l, m) =>
+    _bcwsma = float(na)
+    _s = s
+    _l = l
+    _m = m
+    _bcwsma := (_m * _s + (_l - _m) * nz(_bcwsma[1])) / _l
+    _bcwsma
+
+//舊版本代碼    
+VARB = low[1]
+VARC = FUTU_SMA(math.abs(low-VARB),3,1)/FUTU_SMA(math.max(low-VARB,0),3,1)*100
+VARD = ta.ema(VARC*10,3)
+VARE = ta.lowest(30)
+VARF = ta.highest(VARD,30)
+
+VAR100 = if low <= VARE
+    (VARD+VARF*2)/2
+else
+    0
+    
+BIG_MONEY = ta.ema(VAR100,3)/618
+
+BIG_MONEY1 = if BIG_MONEY>100
+    100
+else
+    BIG_MONEY
+    
+VAR1B=(ta.highest(high,9)-close)/(ta.highest(high,9)-ta.lowest(low,9))*100-70
+VAR2B=FUTU_SMA(VAR1B,9,1)+100
+VAR3B=(close-ta.lowest(low,9))/(ta.highest(high,9)-ta.lowest(low,9))*100
+VAR4B=FUTU_SMA(VAR3B,3,1)
+VAR5B=FUTU_SMA(VAR4B,3,1)+100
+VAR6B=VAR5B-VAR2B
+
+TREND1 = if VAR6B>45
+    VAR6B-45
+else
+    0    
+    
+//新增代碼
+RETAIL=100*(ta.highest(high,55)-close)/(ta.highest(high,55)-ta.lowest(low,55))
+RSV=(close-ta.lowest(low,34))/(ta.highest(high,34)-ta.lowest(low,34))*100
+K=FUTU_SMA(RSV,3,1)
+D=FUTU_SMA(K,3,1)
+J=3*K-2*D
+MM=ta.ema(J,6)
+
+//BUY
+VAR1F=(close-ta.lowest(low,27))/(ta.highest(high,27)-ta.lowest(low,27))*100
+VAR21=FUTU_SMA(VAR1F,3,1)
+TREND=FUTU_SMA(VAR21,3,1)
+POWERLINE=FUTU_SMA(TREND,3,1)
+
+buysig = if ta.crossover(TREND,POWERLINE) and (TREND<30)
+    40
+else
+    -10//COLORBLUE,LINETHICK1
+
+//BUY MORE
+COND_BUYMORE=ta.crossover(MM,RETAIL)
+//SELL LITTLE
+LC=close[2]
+RSI=FUTU_SMA(math.max(close-LC,0),7,1)/FUTU_SMA(math.abs(close-LC),7,1)*100
+SELL=RSI<=RSI[1] and RSI>=79
+
+//SELL
+VAR1=(close-ta.sma(close,6))/ta.sma(close,6)*100
+VAR2=(close-ta.sma(close,24))/ta.sma(close,24)*100
+VAR3=(close-ta.sma(close,32))/ta.sma(close,32)*100
+
+VAR4=(VAR1+VAR2+VAR3)/3
+COND2=VAR4>20 //AND FILTER(VAR4<VAR4[1],5)
+
+//顯示指標
+plot(BIG_MONEY1*2, title="BIG_MONEY", style=plot.style_columns,color=(BIG_MONEY1>-150) and (BIG_MONEY1<BIG_MONEY1[1]) ? color.rgb(129, 194, 77,0):color.rgb(211, 109, 117,0))
+hline(50,title="STRONG_WEAK",color=color.green,linestyle=hline.style_dashed)
+plot(TREND1, title="TREND1", color=TREND1<TREND1[1]? color.green : color.blue,linewidth=4)
+//新增代碼
+plot(RETAIL,title="RETAIL",color = color.green)
+plot(MM,title="MM",color = color.red)
+plot(buysig,title="BUY",color = color.blue)
+
+//plotshape(COND_BUYMORE, style=shape.circle, color = COND_BUYMORE ? color.green : na, location=location.absolute, size=size.tiny)
+
+plotchar(MM,char='✨',color = COND_BUYMORE ? color.green : na, location=location.absolute,size=size.small,title='BUY MORE')
+plotchar(MM,char='🚶',color = SELL ? color.green : na, location=location.absolute,size=size.small,title='SELL LITTLE')
+plotchar(MM,char='☠',color = COND2 ? color.green : na, location=location.absolute,size=size.small,title='SELL')
