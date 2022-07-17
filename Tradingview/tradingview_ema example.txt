@@ -1,0 +1,15 @@
+//@version=5
+indicator(title='Moving Average', shorttitle='MA', overlay=true, timeframe='')
+positionup = input.float(0.9,title='positionup')
+positiondown = input.float(1.1,title='positiondown')
+src = input(close, title='Source')
+offset = input.int(title='Offset', defval=0, minval=-500, maxval=500)
+len = input.int(5, minval=1, title='Length')
+out = ta.ema(src, len)
+len1 = input.int(10, minval=1, title='Length')
+out1 = ta.ema(src, len1)
+plot(out, color=color.new(color.green, 0), title='MA10', offset=offset)
+plot(out1, color=color.new(color.red, 0), title='MA20', offset=offset)
+
+plotshape(out*positionup,style=shape.triangleup,color = ta.crossover(out,out1) ? color.green : na, location=location.absolute,size=size.small,title='BUY')
+plotshape(out*positiondown,style=shape.triangledown,color = ta.crossover(out1,out) ? color.red : na, location=location.absolute,size=size.small,title='SELL')
